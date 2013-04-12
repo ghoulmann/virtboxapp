@@ -1,0 +1,17 @@
+#!/bin/bash -e
+# Setup virtualbox
+
+KVER=`uname -r`
+
+apt-get update
+apt-get install linux-headers-$KVER
+/etc/init.d/vboxdrv setup
+/etc/init.d/vboxweb-service restart
+
+
+vboxmanage extpack install /root/Oracle_VM_Virtualbox_Extension_Pack-4.2.12-84980.vbox-extpack
+
+# restart the service to pick up the extensions
+/etc/init.d/vboxweb-service restart
+
+
