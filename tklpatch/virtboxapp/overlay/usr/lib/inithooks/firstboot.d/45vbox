@@ -1,8 +1,0 @@
-#!/bin/bash -e
-# set nzb password
-
-. /etc/default/inithooks
-
-[ -e $INITHOOKS_CONF ] && . $INITHOOKS_CONF
-$INITHOOKS_PATH/bin/vbox.py vbox --pass="$VBOX_PASS"
-
