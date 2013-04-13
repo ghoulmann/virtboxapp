@@ -1,0 +1,85 @@
+#!/bin/bash -ex
+
+# set variable values
+
+#####VARIABLES for CONFIG #########
+HOSTNAME=vbox
+USERNAME=vbox
+GROUPNAME=vboxusers
+KERNEL_VERSION=`uname -r`
+phpvirtualbox=4.2-4 #from http://code.google.com/p/phpvirtualbox/downloads/list
+###################################
+
+#get extension pack
+wget http://download.virtualbox.org/virtualbox/4.2.12/Oracle_VM_VirtualBox_Extension_Pack-4.2.12-84980.vbox-extpack
+
+
+# set hostname in 2 places
+echo "$HOSTNAME" > /etc/hostname
+sed -i "s|127.0.1.1 \(.*\)|127.0.1.1 $HOSTNAME|" /etc/hosts
+
+
+
+
+# Install function
+install ()
+{
+	apt-get update
+	DEBIAN_FRONTEND=noninteractive apt-get -y \
+	    -o DPkg::Options::=--force-confdef \
+	    -o DPkg::Options::=--force-confold \
+	    install $@
+}
+
+install build-essential \
+	python-software-properties \
+	dkms \
+	linux-headers-$KV \
+	apache2 \
+	libapache2-mod-php5 \
+	php5-cli \
+	libgl1-mesa-glx \
+	libpng12-0 \
+	libpython2.7 \
+	libqt4-network \
+	libqt4-opengl \
+	libqtcore4 \
+	libqtgui4 \
+	libsdl1.2debian \
+	libx11-6 \
+	libxcursor1 \
+	libxinerama1 \
+	libxmu6
+
+# create the nzb userid (which all the nzb daemons run as)
+addgroup $GROUPNAME
+useradd -c "VirtualBox App userid" -d /home/$USERNAME -g $GROUPNAME -m -s /bin/bash "$USERNAME"
+chown -R $USERNAME:$GROUPNAME /home/$USERNAME
+usermod -a -G vboxusers $USERNAME
+
+
+wget http://download.virtualbox.org/virtualbox/4.2.12/virtualbox-4.2_4.2.12-84980~Debian~wheezy_amd64.deb
+dpkg -i virtualbox-4.2_4.2.12-84980~Debian~wheezy_amd64.deb
+
+echo "VBOXWEB_USER=${USERNAME}"                > /etc/default/virtualbox
+echo "VBOXWEB_HOST=127.0.0.1"                 >> /etc/default/virtualbox
+echo "VBOXWEB_PORT=18083"                     >> /etc/default/virtualbox
+echo "VBOXWEB_LOGFILE=/var/log/vboxweb.log" >> /etc/default/virtualbox
+
+
+#Download PHPVirtualbox
+wget http://phpvirtualbox.googlecode.com/files/phpvirtualbox-$phpvirtualbox.zip
+unzip phpvirtualbox-$phpvirtualbox.zip -d /var/www/
+#Create config.php file
+#cd /var/www && mv config.php-example config.php
+
+# Create and config the confconsole services.txt file
+echo "PHPVirtualBox:  http://$ipaddr" > /etc/confconsole/services.txt
+echo "Web Shell:      http://$ipaddr:12320"           >> /etc/confconsole/services.txt
+echo "Webmin:         http://$ipaddr:12321"           >> /etc/confconsole/services.txt
+
+exit 0
+
+
+
+
